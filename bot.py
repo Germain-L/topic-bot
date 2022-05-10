@@ -91,6 +91,8 @@ client = discord.Client()
 
 @client.event
 async def on_ready():
+    await client.change_presence(activity=discord.Game(f'Next gif in {next} messages'))
+
     print('We have logged in as {0.user}'.format(client))
 
 
@@ -103,6 +105,8 @@ async def on_message(message):
 
     if message.content == "!giph":
         await message.channel.send(f"next giph in {next} messages")
+
+    await client.change_presence(activity=discord.Game(f'Next gif in {next} messages'))
 
     if next != 0:
         next -= 1
