@@ -74,7 +74,7 @@ def getBestMatch(occurences) -> list:
     return best_match
 
 
-def getGiph(word) -> str:
+def getGif(word) -> str:
     # get giph from giphy with key and best_match
     url = "http://api.giphy.com/v1/gifs/search"
     params = {
@@ -103,8 +103,8 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content == "!giph":
-        await message.channel.send(f"next giph in {next} messages")
+    if message.content == "!gif":
+        await message.channel.send(f"next gif in {next} messages")
 
     await client.change_presence(activity=discord.Game(f'Next gif in {next} messages'))
 
@@ -120,10 +120,10 @@ async def on_message(message):
 
     occurences = getOccurence(words, lang)
     best_match = getBestMatch(occurences)
-    giph = getGiph(best_match)
+    gif = getGif(best_match)
 
     print(best_match)
 
-    await message.channel.send(giph)
+    await message.channel.send(gif)
 
 client.run(DISCORD_KEY)
