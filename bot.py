@@ -1,129 +1,50 @@
-import sqlite3
-import requests
+# simple discord bot
 import discord
-from langdetect import detect_langs
-from langdetect import DetectorFactory
-from dotenv import load_dotenv
 import os
-import random
 
-from db import create
+from api import getEmotion, getGif
 
-create()
-
+from dotenv import load_dotenv
+from discord.ext import commands
 
 load_dotenv()
-DetectorFactory.seed = 0
 
-con = sqlite3.connect('db.sqlite')
-cur = con.cursor()
+DISCORD_KEY = os.getenv("DISCORD_KEY")
 
-GIPHY_KEY = os.getenv('GIPHY')
-DISCORD_KEY = os.getenv('DISCORD')
+bot = commands.Bot(command_prefix='.')
 
 
-# random int in range [5, 50]
-def getRandomInt() -> int:
-    return random.randint(5, 50)
-
-
-global next
-next = getRandomInt()
-
-
-def detect_lang(sentence) -> str:
-    langs = detect_langs(sentence)
-
-    probabilities = {}
-    for lang in langs:
-        if lang.lang == "en":
-            probabilities["en"] = lang.prob
-        elif lang.lang == "fr":
-            probabilities["fr"] = lang.prob
-
-    print(langs)
-    print(probabilities)
-
-    # return most probable language
-    probabilities = sorted(probabilities.items(), key=lambda x: x[1])
-    return probabilities
-
-
-def getOccurence(words, lang) -> list:
-    occurences = []
-    # select occurence of each word
-    for word in words:
-        if lang == "fr":
-            cur.execute("SELECT occurence FROM fr WHERE word = ?", (word,))
-        else:
-            cur.execute("SELECT occurence FROM en WHERE word = ?", (word,))
-        occurence = cur.fetchone()
-        if occurence:
-            occurences.append((word, occurence[0]))
-        else:
-            occurences.append((word, 99999999999999))
-
-    return occurences
-
-
-def getBestMatch(occurences) -> list:
-    # get word will smalled occurence
-    occurences.sort(key=lambda x: x[1])
-    best_match = occurences[0][0]
-
-    return best_match
-
-
-def getGif(word) -> str:
-    # get giph from giphy with key and best_match
-    url = "http://api.giphy.com/v1/gifs/search"
-    params = {
-        "api_key": GIPHY_KEY,
-        "q": word
-    }
-    r = requests.get(url, params=params)
-    data = r.json()
-    return data["data"][0]["url"]
-
-
-client = discord.Client()
-
-
-@client.event
+# print when bot is ready
+@bot.event
 async def on_ready():
-    await client.change_presence(activity=discord.Game(f'Next gif in {next} messages'))
-
-    print('We have logged in as {0.user}'.format(client))
+    print(f'{bot.user.name} has connected to Discord!')
 
 
-@client.event
+@bot.event
 async def on_message(message):
-    global next
+    # CHECK IF THE MESSAGE SENT TO THE CHANNEL IS "HELLO".
+    if message.content == "hello":
+        # SENDS A MESSAGE TO THE CHANNEL.
+        await message.channel.send("pies are better than cakes. change my mind.")
 
-    if message.author == client.user:
-        return
+    # INCLUDES THE COMMANDS FOR THE BOT. WITHOUT THIS LINE, YOU CANNOT TRIGGER YOUR COMMANDS.
+    await bot.process_commands(message)
 
-    if message.content == "!gif":
-        await message.channel.send(f"next gif in {next} messages")
 
-    await client.change_presence(activity=discord.Game(f'Next gif in {next} messages'))
+@bot.command()
+async def react(ctx):
+    message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+    emotion = getEmotion(message.content)
 
-    if next != 0:
-        next -= 1
-        return
+    # {'emotion': {'Happy': 0.2648372342, 'Excited': 0.1429308198, 'Angry': 0.1006374564, 'Fear': 0.1902021548, 'Sad': 0.1344127347, 'Bored': 0.1669796001}}
+    # get the highest probability
+    emotion = sorted(emotion.items(), key=lambda x: x[1])
+    emotion = emotion[-1][0]
 
-    next = getRandomInt()
+    gif = getGif(emotion)
 
-    # split message to words
-    lang = detect_lang(message.content)
-    words = message.content.split()
+    print(emotion)
+    await ctx.send(gif)
 
-    occurences = getOccurence(words, lang)
-    best_match = getBestMatch(occurences)
-    gif = getGif(best_match)
 
-    print(best_match)
-
-    await message.channel.send(gif)
-
-client.run(DISCORD_KEY)
+bot.run(DISCORD_KEY)
