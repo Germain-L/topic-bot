@@ -14,6 +14,15 @@ DISCORD_KEY = os.getenv("DISCORD_KEY")
 bot = commands.Bot(command_prefix='%')
 
 
+def getLongestWord(sentence):
+    words = sentence.split()
+    longest = ""
+    for word in words:
+        if len(word) > len(longest):
+            longest = word
+    return longest
+
+
 # print when bot is ready
 @bot.event
 async def on_ready():
@@ -41,7 +50,10 @@ async def react(ctx):
     # emotion = sorted(emotion.items(), key=lambda x: x[1])
     # emotion = emotion[-1][0]
 
+    # get keyword from message
     keyword = getKeywordFromMessage(message.content)
+    if keyword == None: 
+        keyword = getLongestWord(message.content)
 
     gif = getGif(keyword)
 

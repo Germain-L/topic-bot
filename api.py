@@ -56,8 +56,11 @@ def getKeywordFromMessage(message):
 
     #[{'keyword': 'shitty bot', 'confidence_score': 0.910172}]}
     # get highest confidence score keyword and return
-    keywords = sorted(keywords["keywords"], key=lambda x: x["confidence_score"])
-    return keywords[-1]["keyword"]
+    try:
+        keywords = sorted(keywords["keywords"], key=lambda x: x["confidence_score"])
+        return keywords[-1]["keyword"]
+    except:
+        return None
 
 
 def getGif(word) -> str:
