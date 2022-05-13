@@ -11,7 +11,7 @@ load_dotenv()
 
 DISCORD_KEY = os.getenv("DISCORD_KEY")
 
-bot = commands.Bot(command_prefix='.')
+bot = commands.Bot(command_prefix='%')
 
 
 # print when bot is ready
